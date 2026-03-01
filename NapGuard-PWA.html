@@ -1,62 +1,50 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hybrid Alarm System</title>
-</head>
-<body>
-    <h1>Hybrid Alarm System</h1>
-    <button id="setAlarm">Set Alarm</button>
     <script>
-        // Web Audio API
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let sound;
+        // Sound Implementation using Web Audio API
+        function playSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A note
+            oscillator.connect(audioContext.destination);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 1); // Play for 1 second
+        }
 
-        const loadSound = async (url) => {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            sound = await audioContext.decodeAudioData(arrayBuffer);
-        };
-
-        const playSound = () => {
-            const source = audioContext.createBufferSource();
-            source.buffer = sound;
-            source.connect(audioContext.destination);
-            source.start(0);
-        };
-
-        // Vibration API
-        const vibrate = () => {
+        // Vibration Implementation using Vibration API
+        function triggerVibration() {
             if (navigator.vibrate) {
-                navigator.vibrate([500, 200, 500]); // Custom vibration pattern
+                navigator.vibrate([200, 100, 200]); // Vibrate pattern
+            } else {
+                alert('Vibration API not supported on this device.');
             }
-        };
+        }
 
-        // Notification API
-        const showNotification = (title, body) => {
+        // Notification Implementation using Notification API
+        function triggerNotification() {
             if (Notification.permission === 'granted') {
-                new Notification(title, { body });
+                new Notification('Alarm Triggered!', { body: 'Your hybrid alarm has been activated!' });
             } else if (Notification.permission !== 'denied') {
                 Notification.requestPermission().then(permission => {
                     if (permission === 'granted') {
-                        new Notification(title, { body });
+                        triggerNotification();
                     }
                 });
             }
-        };
+        }
 
-        document.getElementById('setAlarm').addEventListener('click', () => {
-            const alarmTime = new Date(Date.now() + 10000); // Set alarm for 10 seconds later
-            setTimeout(() => {
-                playSound();
-                vibrate();
-                showNotification('Alarm!', 'Your alarm is ringing.');
-            }, alarmTime - Date.now());
-        });
-
-        // Load the sound file (replace 'alarm.mp3' with your sound file)
-        loadSound('alarm.mp3');
+        // Alarm Trigger Function
+        function triggerAlarm() {
+            playSound();
+            triggerVibration();
+            triggerNotification();
+        }
     </script>
+</head>
+<body>
+    <h1>Hybrid Alarm System</h1>
+    <button onclick="triggerAlarm()">Trigger Alarm</button>
 </body>
 </html>
