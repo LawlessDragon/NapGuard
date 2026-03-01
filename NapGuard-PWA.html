@@ -1,1 +1,62 @@
-<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>NapGuard</title>\n</head>\n<body>\n    <h1>NapGuard - Hybrid Alarm System</h1>\n    <p>This alarm system combines Sound, Vibration, and Notification features to help you wake up effectively.</p>\n    <script>\n        function triggerAlarm() {\n            // Sound Alarm\n            var audio = new Audio('alarm-sound.mp3');\n            audio.play();\n            // Vibration Alarm\n            if (navigator.vibrate) {\n                navigator.vibrate([500, 300, 500, 300, 500]); // Custom vibration pattern\n            }\n            // Notification Alarm\n            Notification.requestPermission().then(function(permission) {\n                if (permission === 'granted') {\n                    new Notification('Time to Wake Up!', {\n                        body: 'Your nap is over!\n                     });\n                }\n            });\n        }\n\n        // Set the alarm time (in milliseconds)\n        var alarmTime = new Date().getTime() + 60000; // 1 minute later\n        setTimeout(triggerAlarm, alarmTime - new Date().getTime());\n    </script>\n</body>\n</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Alarm System</title>
+</head>
+<body>
+    <h1>Hybrid Alarm System</h1>
+    <button id="setAlarm">Set Alarm</button>
+    <script>
+        // Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let sound;
+
+        const loadSound = async (url) => {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            sound = await audioContext.decodeAudioData(arrayBuffer);
+        };
+
+        const playSound = () => {
+            const source = audioContext.createBufferSource();
+            source.buffer = sound;
+            source.connect(audioContext.destination);
+            source.start(0);
+        };
+
+        // Vibration API
+        const vibrate = () => {
+            if (navigator.vibrate) {
+                navigator.vibrate([500, 200, 500]); // Custom vibration pattern
+            }
+        };
+
+        // Notification API
+        const showNotification = (title, body) => {
+            if (Notification.permission === 'granted') {
+                new Notification(title, { body });
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification(title, { body });
+                    }
+                });
+            }
+        };
+
+        document.getElementById('setAlarm').addEventListener('click', () => {
+            const alarmTime = new Date(Date.now() + 10000); // Set alarm for 10 seconds later
+            setTimeout(() => {
+                playSound();
+                vibrate();
+                showNotification('Alarm!', 'Your alarm is ringing.');
+            }, alarmTime - Date.now());
+        });
+
+        // Load the sound file (replace 'alarm.mp3' with your sound file)
+        loadSound('alarm.mp3');
+    </script>
+</body>
+</html>
